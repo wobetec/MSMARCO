@@ -1,90 +1,75 @@
 """
-Wrap usage of our datasets and also provide tokenizer interface.
+Wrap usage of our datasets and also provide interface for preprocessing.
 """
 import os
 import pickle
 import random
 from tqdm import tqdm
-
-import nltk
-from nltk.tokenize import word_tokenize
-
-
-class Query:
-    def __init__(self, query_id: str, text: str, tokenized_text: list[str] = None):
-        self.query_id = query_id
-        self.text = text
-        self.tokenized_text = tokenized_text
-
-
-class Document:
-    def __init__(self, doc_id: str, text: str, tokenized_text: list[str] = None):
-        self.doc_id = doc_id
-        self.text = text
-        self.tokenized_text = tokenized_text
-
-
-class Qrel:
-    def __init__(self, query_id: str, docs_ids: 'list[str]' = None):
-        self.query_id = query_id
-        if docs_ids is None:
-            self.docs_ids = []
-        else:
-            self.docs_ids = docs_ids
+from nltk.stem import PorterStemmer
 
 
 class MSMarcoDataset:
     def __init__(self, data_folder: str):
         self.data_folder = data_folder
+        self.input_file = None
 
-    def __load_data(self, input_file: str):
+    def load_data(self, input_file: str):
         with open(os.path.join(self.data_folder, input_file), 'rb') as f:
             dataset = pickle.load(f)
 
-        self.queries = {key: Query(key, value.text) for key, value in tqdm(dataset['queries'].items(), desc='Loading queries')}
-        self.documents = {key: Document(key, value.text) for key, value in tqdm(dataset['docs'].items(), desc='Loading documents')}
-        _qrels = {}
+        self.input_file = input_file
+
+        self.queries = {key: value.text for key, value in tqdm(dataset['queries'].items(), desc='Loading queries')}
+        self.documents = {key: value.text for key, value in tqdm(dataset['docs'].items(), desc='Loading documents')}
+        self.qrels = {}
         for qrel in tqdm(dataset['qrels'], desc='Loading qrels'):
             qrel_id = qrel.query_id
             doc_id = qrel.doc_id
-            if qrel_id not in _qrels:
-                _qrels[qrel_id] = [doc_id]
+            if qrel_id not in self.qrels:
+                self.qrels[qrel_id] = [doc_id]
             else:
-                _qrels[qrel_id].append(doc_id)
-        self.qrels = {key: Qrel(key, value) for key, value in _qrels.items()}
+                self.qrels[qrel_id].append(doc_id)
 
-    def __tokenize_data(self):
-        nltk.download('punkt_tab')
-        nltk.download('punkt')
-
-        for query in tqdm(self.queries.values(), desc='Tokenizing queries'):
-            query.tokenized_text = word_tokenize(query.text.lower())
-        
-        for doc in tqdm(self.documents.values(), desc='Tokenizing documents'):
-            doc.tokenized_text = word_tokenize(doc.text.lower())
-
-    def __split_data(self, split_ratio: float = 0.8, seed: int = 42):
+    def split_data(self, split_ratio: float = 0.8, seed: int = 42):
         random.seed(seed)
-
-        # Split the queries (assuming queries is a dictionary of {query_id: query_object})
-        query_ids = list(self.queries.keys())  # List of query IDs
-
-        # Shuffle query IDs to ensure a random split
+        query_ids = list(self.queries.keys())
         random.shuffle(query_ids)
-
-        # Split into 80% for training, 20% for validation
-        split_ratio = 0.8
         self.train_query_ids = query_ids[:int(len(query_ids) * split_ratio)]
         self.test_query_ids = query_ids[int(len(query_ids) * split_ratio):]
 
-    def get_data(self, input_file: str):
-        print(f"Loading data from {input_file}...")
-        self.__load_data(input_file)
-        
-        print('Tokenizing data...')
-        self.__tokenize_data()
+class PreProcessor:
 
-        print('Split data into train and test sets...')
-        self.__split_data()
+    class_processors = {}
 
-        print('Data loading and processing complete.')
+    def __init__(self, pipeline: list[callable]):
+        self.pipeline = pipeline
+
+    def preprocess_text(self, text: str) -> str:
+        for func in self.pipeline:
+            text = func(text)
+        return text
+
+    def preprocess(self, dataset: MSMarcoDataset):
+        print("Preprocessing dataset...")
+        dataset.queries = {query_id: self.preprocess_text(text) for query_id, text in tqdm(dataset.queries.items(), desc='Preprocessing queries')}
+        dataset.documents = {doc_id: self.preprocess_text(text) for doc_id, text in tqdm(dataset.documents.items(), desc='Preprocessing documents')}
+
+    @classmethod
+    def lowercase(cls, text: str) -> str:
+        return text.lower()
+    
+    @classmethod
+    def remove_punctuation(cls, text: str) -> str:
+        return ''.join(char for char in text if char.isalnum() or char.isspace())
+    
+    @classmethod
+    def remove_stopwords(cls, text: str) -> str:
+        stopwords = set(["the", "is", "in", "and", "to", "a"])
+        return ' '.join(word for word in text.split() if word not in stopwords)
+    
+    @classmethod
+    def stem(cls, text: str) -> str:
+        if 'stemmer' not in cls.class_processors:
+            cls.class_processors['stemmer'] = PorterStemmer()
+        stemmer = cls.class_processors['stemmer']
+        return ' '.join(stemmer.stem(word) for word in text.split())
