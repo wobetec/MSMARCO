@@ -10,6 +10,10 @@ from src.datasets import MSMarcoDataset
 from src.retrivers.retriver import Retriver
 
 
+nltk.download('punkt_tab')
+nltk.download('punkt')
+
+
 class BM25(Retriver):
     """
     BM25 algorithm for document retrieval.
@@ -18,21 +22,13 @@ class BM25(Retriver):
         self.documents = list(dataset.documents.values())
         self.documents_ids = list(dataset.documents.keys())
 
-        nltk.download('punkt_tab')
-        nltk.download('punkt')
+        self.bm25 = BM25Okapi(self.documents, tokenizer=self.__tokenizer, k1=k1, b=b, epsilon=epsilon)
 
-        self.__tokenize_docs()
-
-        self.bm25 = BM25Okapi(self.documents, k1=k1, b=b, epsilon=epsilon)
-
-    def __tokenize(self, text: str) -> list[str]:
+    def __tokenizer(self, text: str) -> list[str]:
         return word_tokenize(text)
 
-    def __tokenize_docs(self):
-        self.documents = [self.__tokenize(document) for document in tqdm(self.documents, desc="Tokenizing documents", unit="doc")]
-
     def run(self, dataset: MSMarcoDataset, query_id: str, k: int = 10, **kwargs) -> list[tuple[str, float]]:
-        query = self.__tokenize(dataset.queries[query_id])
+        query = self.__tokenizer(dataset.queries[query_id])
         scores = self.bm25.get_scores(query)
         sorted_scores = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
         top_k = sorted_scores[:k]

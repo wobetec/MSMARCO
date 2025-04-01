@@ -1,5 +1,5 @@
 """
-Wrapper for BM25 algorithm.
+Wrapper for MonoBERT algorithm.
 """
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
