@@ -31,3 +31,20 @@ To track out evolution we're writing the seps we took in [`history.md`](history.
 
 * [Transformers](https://huggingface.co/docs/transformers/index) for the models and tokenizers.
 * [Rankify](https://github.com/DataScienceUIBK/Rankify) for the implementation of almost all used llm models.
+
+## Rodando Vespa
+
+docker exec -it vespa bash -c "
+  cd /home/vespa/application &&
+  vespa-deploy prepare . &&
+  vespa-deploy activate
+"
+ 
+## Query teste
+
+curl -sG 'http://localhost:8080/search/' \
+  --data-urlencode "yql=select * from sources msmarco where userInput('your example query');" \
+  --data-urlencode "hits=5" \
+  --data-urlencode "ranking.profile=bm25-profile" \
+| jq .
+
