@@ -1,0 +1,17 @@
+<services version="1.0">
+  <!-- Container (API + Search) -->
+  <container id="msmarco-container" version="1.0">
+    <search/>           <!-- habilita a cadeia de busca padrão -->
+    <document-api/>     <!-- habilita PUT/GET de documentos -->
+    <nodes count="1"/>  <!-- 1 nó de container -->
+  </container>
+
+  <!-- Content Cluster (armazenamento e indexação) -->
+  <content id="msmarco" version="1.0">
+    <redundancy>1</redundancy>
+    <documents>
+      <document type="msmarco" mode="index"/>
+    </documents>
+    <nodes count="1"/>  <!-- 1 nó de conteúdo -->
+  </content>
+</services>

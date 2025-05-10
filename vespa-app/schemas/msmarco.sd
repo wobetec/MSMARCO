@@ -1,0 +1,12 @@
+# Copyright Vespa.ai. Licensed under the terms of the Apache 2.0 license.
+
+schema msmarco {
+    document msmarco {
+
+        field content type string {
+            indexing: index | summary
+            index: enable-bm25
+        }
+
+    }
+}
