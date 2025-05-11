@@ -59,6 +59,10 @@ MonoBERT is a BERT-based model that uses the BERT embeddings to calculate the si
 
 Here is like Faiss. It precomputes the embeddings and uses them to calculate the similarity between documents and the query embedding. The difference is that it uses a different model to compute the embeddings. It is also very fast.
 
+## Tutorials
+
+We provide some tutorials to run some specific models or implement some specific techniques that we learn during the project. You can find them in the [`tutorials`](/tutorials) folder.
+
 ## Installation
 
 We recommend using a virtual environment to avoid dependency conflicts and use `python >= 3.10`.
@@ -92,7 +96,7 @@ We create the framework in such way that you only need to run each layer/stage o
 The CLI interface is like:
 
 ```bash
-python experiments.py [dataset] [preproc] [*models]
+python experiments.py run_experiment [dataset] [preproc] [*models]
 ```
 
 Where:
@@ -163,3 +167,4 @@ Here is our main results:
 
 * [Transformers](https://huggingface.co/docs/transformers/index) for the models and tokenizers.
 * [Rankify](https://github.com/DataScienceUIBK/Rankify) for the implementation of almost all used llm models.
+* [Vespa](https://vespa.ai/)

@@ -12,6 +12,7 @@ from src.rankers.monobert import MonoBatchBERT, MonoBERT
 from src.rankers.sentence_transformer import SentenceTransformerSimilarity
 from src.results import Result
 from src.retrivers.bm25 import BM25, BM25Fast, BM25PySerini
+from src.retrivers.vespa import VespaBM25
 from src.retrivers.faiss import Faiss
 from src.utils.cuda import check_cuda
 
@@ -134,6 +135,21 @@ class PreDefinedLayers:
             times.append(end_time - start_time)
         return score_docs, times
 
+    @staticmethod
+    def VespaBM25(dataset: MSMarcoDataset, prev_score_docs: dict[str, list[tuple[str, float]]], dataset_name: str, *args, **kwargs) -> tuple[dict[str, list[tuple[str, float]]], list[float]]:
+        vespa = VespaBM25()
+        score_docs = {}
+        times = []
+        for query_id in tqdm(list(prev_score_docs.keys())):
+            start_time = time.perf_counter()
+            temp_score_docs = vespa.run(dataset, query_id, k=K)
+            if 'index:msmarco/' in temp_score_docs[0][0]:
+                continue
+            score_docs[query_id] = temp_score_docs
+            end_time = time.perf_counter()
+            times.append(end_time - start_time)
+        return score_docs, times
+
     # Rerankers
     @staticmethod
     def SentenceTransformerSimilarity(dataset: MSMarcoDataset, prev_score_docs: dict[str, list[tuple[str, float]]], dataset_name: str, *args, **kwargs) -> tuple[dict[str, list[tuple[str, float]]], list[float]]:
@@ -178,6 +194,7 @@ PRE_DEFINED_LAYERS_MAP = {
     'BM25Fast': PreDefinedLayers.BM25Fast,
     'BM25PySerini': PreDefinedLayers.BM25PySerini,
     'Faiss': PreDefinedLayers.Faiss,
+    'VespaBM25': PreDefinedLayers.VespaBM25,
 
     'SentenceTransformerSimilarity': PreDefinedLayers.SentenceTransformerSimilarity,
     'MonoBatchBERT': PreDefinedLayers.MonoBatchBERT,
