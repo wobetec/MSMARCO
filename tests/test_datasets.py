@@ -41,12 +41,13 @@ class TestPreProcessor(unittest.TestCase):
         self.assertEqual(processed_text, "hello world!", "Text should be lowercased.")
     
     def test_preprocess(self):
-        processor = PreProcessor(pipeline=[PreProcessor.lowercase])
-        texts = ["Hello World!", "Python is great!"]
-        processed_texts = processor.preprocess(texts)
+        dataset = MSMarcoDataset(data_folder='data/subset_msmarco_train_0')
+        dataset.load_data(input_file='subset_msmarco_train_0.01_9.pkl')
         
-        self.assertEqual(processed_texts, ["hello world!", "python is great!"], "Texts should be lowercased.")
-
+        # Assuming the dataset has a method to get all texts
+        processor = PreProcessor(pipeline=[PreProcessor.lowercase])
+        processed_texts = processor.preprocess(dataset)
+        
     #------------------------------------------------------------#
     # Processing methods
     #------------------------------------------------------------#

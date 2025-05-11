@@ -101,3 +101,13 @@ def mndcg_score(sorted_docs: dict[str, list[tuple[str, float]]], relevant_docs: 
         return __score_sequencial(ndcg, sorted_docs, relevant_docs, k)
     else:
         raise NotImplementedError("Parallel computation is not implemented yet.")
+
+
+#------------------------------------------------------------#
+# K series
+#------------------------------------------------------------#
+def mrr_series_score(sorted_docs: dict[str, list[tuple[str, float]]], relevant_docs: dict[str, list[str]]) -> list[float]:
+    mrr_values = []
+    for k in range(len(sorted_docs[list(sorted_docs.keys())[0]]) + 1):
+        mrr_values.append(mrr_score(sorted_docs, relevant_docs, k))
+    return mrr_values

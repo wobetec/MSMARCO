@@ -9,3 +9,7 @@ torchvision
 torchaudio
 transformers
 jupyter
+pyserini
+faiss-cpu
+sentence-transformers
+fastbm25

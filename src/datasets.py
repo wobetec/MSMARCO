@@ -7,7 +7,6 @@ import random
 from tqdm import tqdm
 from nltk.stem import PorterStemmer
 
-
 class MSMarcoDataset:
     def __init__(self, data_folder: str):
         self.data_folder = data_folder
