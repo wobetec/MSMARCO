@@ -1,0 +1,14 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  vespa:
+    image: vespaengine/vespa
+    container_name: vespa
+    hostname: vespa-tutorial
+    ports:
+      - "8080:8080"
+      - "19071:19071"
+      - "19092:19092"
+    volumes:
+      - ./app-vespa:/app-vespa
