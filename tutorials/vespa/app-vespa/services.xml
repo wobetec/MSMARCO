@@ -1,9 +1,18 @@
 <services version="1.0">
   <!-- Container (API + Search) -->
   <container id="msmarco-container" version="1.0">
-    <search/>           <!-- habilita a cadeia de busca padrão -->
-    <document-api/>     <!-- habilita PUT/GET de documentos -->
-    <nodes count="1"/>  <!-- 1 nó de container -->
+    <!-- Hugging Face embedding model component -->
+    <component id="hf-embedder" type="hugging-face-embedder">
+      <transformer-model path="models/bert_base_uncased/model.onnx"/>
+      <tokenizer-model path="models/bert_base_uncased/tokenizer.json"/>
+      <max-tokens>512</max-tokens>
+      <normalize>true</normalize>
+      <pooling-strategy>mean</pooling-strategy>
+    </component>
+
+    <search/>
+    <document-api/>
+    <nodes count="1"/>
   </container>
 
   <!-- Content Cluster (armazenamento e indexação) -->
@@ -12,6 +21,6 @@
     <documents>
       <document type="msmarco" mode="index"/>
     </documents>
-    <nodes count="1"/>  <!-- 1 nó de conteúdo -->
+    <nodes count="1"/>
   </content>
 </services>

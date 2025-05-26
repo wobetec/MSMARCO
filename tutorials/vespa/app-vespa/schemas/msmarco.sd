@@ -1,10 +1,54 @@
-# Copyright Vespa.ai. Licensed under the terms of the Apache 2.0 license.
-
 schema msmarco {
     document msmarco {
+        field id type string {
+            indexing: summary | attribute
+        }
+
         field content type string {
             indexing: index | summary
             index: enable-bm25
+        }
+    }
+
+    # Field para embeddings - corrigido para usar o tamanho correto do E5-small-v2
+    field content_embedding type tensor<float>(d0[768]) {
+        indexing: input content | embed hf-embedder | attribute | summary
+        attribute {
+            distance-metric: angular
+        }
+    }
+
+    rank-profile bm25 inherits default {
+        first-phase {
+            expression: bm25(content)
+        }
+    }
+
+    rank-profile semantic inherits default {
+        inputs {
+            query(q) tensor<float>(d0[768])
+        }
+        first-phase {
+            expression: closeness(field, content_embedding)
+        }
+    }
+
+    rank-profile hybrid inherits default {
+        inputs {
+            query(q) tensor<float>(d0[768])
+        }
+        first-phase {
+            expression: bm25(content) + closeness(field, content_embedding)
+        }
+    }
+
+    rank-profile linear_fusion inherits default {
+        inputs {
+            query(q) tensor<float>(d0[768])
+            query(alpha) double: 0.5
+        }
+        first-phase {
+            expression: query(alpha) * bm25(content) + (1 - query(alpha)) * closeness(field, content_embedding)
         }
     }
 }
